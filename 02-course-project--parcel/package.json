@@ -3,6 +3,8 @@
 		"@parcel/transformer-glsl": "2.9.3"
 	},
 	"dependencies": {
+		"fontfaceobserver": "^2.3.0",
+		"imagesloaded": "^5.0.0",
 		"three": "^0.156.1"
 	}
 }
