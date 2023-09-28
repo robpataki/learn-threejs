@@ -24,7 +24,10 @@ export default class Sketch {
     );
     this.camera.position.z = 600;
 
-    // Control exactly how big rendered objects should appear (in this case, the 100x100px object will measure 100x100px when rendered in the browser)
+    /*
+      Control exactly how big rendered objects should appear (in this case,
+      the 100x100px object will measure 100x100px when rendered in the browser)
+    */
     this.camera.fov = 2 * Math.atan(this.height / 2 / 600) * (180 / Math.PI);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -56,6 +59,7 @@ export default class Sketch {
     });
 
     const allDone = [fontOpen, fontPlayFair, preloadImages];
+    this.currentScroll = 0;
 
     Promise.all(allDone).then(() => {
       this.addImages();
@@ -64,18 +68,26 @@ export default class Sketch {
       this.setupResize();
       this.addObjects();
       this.render();
+
+      window.addEventListener("scroll", () => {
+        console.log(window.scrollY);
+      });
     });
   }
 
   addImages() {
     this.imageStore = this.images.map((img) => {
       let bounds = img.getBoundingClientRect();
-      console.log(bounds);
-      const { top, left, width, height } = bounds;
+      let { top, left, width, height } = bounds;
 
-      const geometry = new THREE.PlaneGeometry(width, height, 1, 1);
-      const material = new THREE.MeshBasicMaterial({ color: "#ff0000" });
-      const mesh = new THREE.Mesh(geometry, material);
+      let geometry = new THREE.PlaneGeometry(width, height, 1, 1);
+      let texture = new THREE.Texture(img);
+      texture.needsUpdate = true;
+      let material = new THREE.MeshBasicMaterial({
+        // color: "#ff0000",
+        map: texture,
+      });
+      let mesh = new THREE.Mesh(geometry, material);
       this.scene.add(mesh);
 
       return {
@@ -90,7 +102,6 @@ export default class Sketch {
     this.imageStore.forEach((o) => {
       o.mesh.position.y = -o.top + this.height / 2 - o.height / 2;
       o.mesh.position.x = o.left - this.width / 2 + o.width / 2;
-      console.log(o);
     });
   }
 
@@ -129,11 +140,10 @@ export default class Sketch {
   }
 
   render() {
-    this.time += 0.05;
+    // this.time += 0.05;
     // this.mesh.rotation.x = this.time / 2000;
     // this.mesh.rotation.y = this.time / 1000;
-
-    this.material.uniforms.time.value = this.time;
+    // this.material.uniforms.time.value = this.time;
 
     this.renderer.render(this.scene, this.camera);
     window.requestAnimationFrame(this.render.bind(this));

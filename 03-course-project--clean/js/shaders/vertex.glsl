@@ -1,3 +1,7 @@
+
+//	Classic Perlin 3D Noise 
+//	by Stefan Gustavson
+//
 vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
 vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
 vec3 fade(vec3 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
@@ -59,7 +63,7 @@ float cnoise(vec3 P){
   float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));
   float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));
   float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));
-  float n101 = dot(g101, vec3(Pf1.x, Pf0.y,Pf1.z));
+  float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));
   float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));
   float n111 = dot(g111, Pf1);
 
@@ -71,24 +75,29 @@ float cnoise(vec3 P){
 }
 
 uniform float time;
+uniform vec2 hover;
+uniform float hoverState;
 varying float vNoise;
 varying vec2 vUv;
 
+
 void main() {
-  vec3 newposition = position;
-  float PI = 3.1415925;
+    vec3 newposition = position;
+    float PI = 3.1415925;
 
-  // float noise = cnoise(vec3(position.x*4.,position.y*4.+time/5.,0.));
-  float noise = cnoise(3.*vec3(position.x,position.y, position.z + time/10.));
-  // newposition.z += 0.1*sin((newposition.x + 0.25 + time/10.)*2.*PI);
-  float dist = distance(uv,vec2(0.1));
+    float noise = cnoise(3.*vec3(position.x,position.y,position.z + time/30.));
+    // newposition.z += 0.1*sin( (newposition.x  + 0.25 + time/10.)*2.*PI);
+    
+    float dist = distance(uv,hover);
 
-  newposition.z += 0.1*sin(dist*10.);
+    newposition.z += hoverState*10.*sin(dist*10. + time);
 
-  // newposition += 0.1*normal*noise;
+    // newposition.z += 0.05*sin(dist*40. );
 
-  vNoise = noise;
-  vUv = uv;
+    // newposition += 0.1*normal*noise;
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(newposition,1.0);
+    vNoise = hoverState*sin(dist*10. - time);
+    vUv = uv;
+
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( newposition, 1.0 );
 }
