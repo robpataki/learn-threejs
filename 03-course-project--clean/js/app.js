@@ -139,11 +139,14 @@ export default class Sketch {
         ${noise}
         void main(){
           vec2 newUV = vUv;
-          float area = smoothstep(0.4,0.,vUv.y);
-          area = pow(area,4.);
-          newUV.x += (vUv.x + 0.5) * 0.2*area*scrollSpeed;
+          float area = smoothstep(1.,0.6,vUv.y)*2. - 1.;
+          // area = pow(area,4.);
+          float noise = 0.5 * (cnoise(vec3(vUv*10., time)) + 1.);
+          float n = smoothstep(0.5,0.51, noise + area);
+          newUV.x -= (vUv.x - 0.5) * 0.1*area*scrollSpeed;
           gl_FragColor = texture2D( tDiffuse, newUV);
-          // gl_FragColor = vec4(area,0.,0.,1.);
+          // gl_FragColor = vec4(n,0.,0.,1.);
+          gl_FragColor = mix(vec4(1.),texture2D(tDiffuse, newUV),n);
         }
         `,
     };
@@ -261,6 +264,7 @@ export default class Sketch {
 
     this.setPosition();
     this.customPass.uniforms.scrollSpeed.value = this.scroll.speedTarget;
+    this.customPass.uniforms.time.value = this.time;
 
     // this.renderer.render(this.scene, this.camera);
     this.composer.render();
