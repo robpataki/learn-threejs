@@ -86,6 +86,7 @@ export default class Sketch {
       this.resize();
       this.setupResize();
       // this.addObjects();
+      this.composerPass();
       this.render();
     });
   }
@@ -102,9 +103,55 @@ export default class Sketch {
       const intersects = this.raycaster.intersectObjects(this.scene.children);
 
       if (intersects.length > 0) {
-        console.log(intersects[0]);
+        const obj = intersects[0].object;
+        obj.material.uniforms.hover.value = intersects[0].uv;
       }
     });
+  }
+
+  composerPass() {
+    this.composer = new EffectComposer(this.renderer);
+    this.renderPass = new RenderPass(this.scene, this.camera);
+    this.composer.addPass(this.renderPass);
+
+    //custom shader pass
+    var counter = 0.0;
+    this.myEffect = {
+      uniforms: {
+        tDiffuse: { value: null },
+        scrollSpeed: { value: null },
+        time: { value: null },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix 
+            * modelViewMatrix 
+            * vec4( position, 1.0 );
+        }
+        `,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        varying vec2 vUv;
+        uniform float scrollSpeed;
+        uniform float time;
+        ${noise}
+        void main(){
+          vec2 newUV = vUv;
+          float area = smoothstep(0.4,0.,vUv.y);
+          area = pow(area,4.);
+          newUV.x += (vUv.x + 0.5) * 0.2*area*scrollSpeed;
+          gl_FragColor = texture2D( tDiffuse, newUV);
+          // gl_FragColor = vec4(area,0.,0.,1.);
+        }
+        `,
+    };
+
+    this.customPass = new ShaderPass(this.myEffect);
+    this.customPass.renderToScreen = true;
+
+    this.composer.addPass(this.customPass);
   }
 
   setupResize() {
@@ -125,13 +172,16 @@ export default class Sketch {
         time: { value: 0 },
         uImage: { value: 0 },
         hover: { value: new THREE.Vector2(0.5, 0.5) },
+        hoverState: { value: 0 },
         oceanTexture: { value: new THREE.TextureLoader().load(ocean) },
       },
       side: THREE.DoubleSide,
-      // fragmentShader: fragment,
+      fragmentShader: fragment,
       vertexShader: vertex,
-      wireframe: true,
+      // wireframe: true,
     });
+
+    this.materials = [];
 
     this.imageStore = this.images.map((img) => {
       let bounds = img.getBoundingClientRect();
@@ -145,6 +195,16 @@ export default class Sketch {
       let texture = new THREE.Texture(img);
       texture.needsUpdate = true;
       let material = this.material.clone();
+      material.uniforms.uImage.value = texture;
+      this.materials.push(material);
+
+      img.addEventListener("mouseenter", () => {
+        gsap.to(material.uniforms.hoverState, { duration: 1, value: 1 });
+      });
+      img.addEventListener("mouseleave", () => {
+        gsap.to(material.uniforms.hoverState, { duration: 1, value: 0 });
+      });
+
       /* let material = new THREE.MeshBasicMaterial({
         color: 0xff0000,
         map: texture,
@@ -200,7 +260,14 @@ export default class Sketch {
     this.currentScroll = this.scroll.scrollToRender;
 
     this.setPosition();
-    this.renderer.render(this.scene, this.camera);
+    this.customPass.uniforms.scrollSpeed.value = this.scroll.speedTarget;
+
+    // this.renderer.render(this.scene, this.camera);
+    this.composer.render();
+
+    this.materials.forEach((material) => {
+      material.uniforms.time.value = this.time;
+    });
 
     window.requestAnimationFrame(this.render.bind(this));
   }
