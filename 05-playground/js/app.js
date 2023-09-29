@@ -257,12 +257,12 @@ export default class Playground {
 
     this.scene.rotation.y += 0.0005;
 
+    // changing objects based on pointer interaction
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const intersects = this.raycaster.intersectObjects(
       this.interactiveObjects,
       false
     );
-
     if (intersects.length > 0) {
       if (
         this.activeObject !== null &&
@@ -279,6 +279,11 @@ export default class Playground {
       }
       this.activeObject = null;
     }
+
+    this.interactiveObjects.map((interactiveObject) => {
+      interactiveObject.position.y +=
+        0.1 * Math.sin(this.time * 10 + interactiveObject.name.length);
+    });
 
     window.requestAnimationFrame(this.render.bind(this));
   }
