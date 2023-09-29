@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { gsap } from "gsap";
 
 export default class Playground {
   constructor(options) {
@@ -22,8 +23,14 @@ export default class Playground {
       10,
       1000
     );
-    this.camera.position.z = 300;
-    this.camera.position.y = 100;
+    this.cameraStartingPos = {
+      x: 0,
+      y: 100,
+      z: 300,
+    };
+    this.camera.position.x = this.cameraStartingPos.x;
+    this.camera.position.y = this.cameraStartingPos.y;
+    this.camera.position.z = this.cameraStartingPos.z;
 
     this.camera.fov = 2 * Math.atan(this.height / 2 / 500) * (180 / Math.PI);
 
@@ -270,7 +277,7 @@ export default class Playground {
     this.time += 0.005;
     this.renderer.render(this.scene, this.camera);
 
-    this.scene.rotation.y += 0.0005;
+    // this.scene.rotation.y += 0.0005;
 
     // changing objects based on pointer interaction
     this.raycaster.setFromCamera(this.pointer, this.camera);
@@ -302,7 +309,9 @@ export default class Playground {
 
     this.interactiveObjects.map((interactiveObject) => {
       interactiveObject.position.y +=
-        0.1 * Math.sin(this.time * 10 + interactiveObject.name.length);
+        0.1 * Math.sin(this.time * 5 + interactiveObject.name.length);
+      interactiveObject.rotation.z =
+        0.05 * Math.cos(this.time * 4 + interactiveObject.name.length);
     });
 
     window.requestAnimationFrame(this.render.bind(this));
@@ -342,6 +351,21 @@ export default class Playground {
     this.container.style.cursor = cursorType;
   }
 
+  setCameraPosition() {
+    const { x, y, z } = this.selectedObject
+      ? this.selectedObject.position
+      : this.cameraStartingPos;
+    // this.camera.up = new THREE.Vector3(0, 0, 0);
+    // this.camera.lookAt(new THREE.Vector3(x, y, z));
+    gsap.to(this.camera.position, {
+      x,
+      y,
+      z,
+      duration: 1.6,
+      ease: "expo.inOut",
+    });
+  }
+
   handlePointerUp() {
     this.pointerDown = false;
 
@@ -363,6 +387,10 @@ export default class Playground {
     }
 
     this.cachedActiveObject = null;
+
+    if (this.selectedObject !== null) {
+      this.setCameraPosition();
+    }
   }
 }
 
