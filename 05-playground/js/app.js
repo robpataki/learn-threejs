@@ -14,6 +14,7 @@ export default class Playground {
     this.height = this.container.offsetHeight;
 
     this.scene = new THREE.Scene();
+    this.scene.rotation.y = THREE.MathUtils.degToRad(300);
 
     this.camera = new THREE.PerspectiveCamera(
       70,
@@ -21,7 +22,7 @@ export default class Playground {
       10,
       1000
     );
-    this.camera.position.z = 100;
+    this.camera.position.z = 300;
     this.camera.position.y = 100;
 
     this.camera.fov = 2 * Math.atan(this.height / 2 / 500) * (180 / Math.PI);
@@ -46,21 +47,22 @@ export default class Playground {
     const axesHelper = new THREE.AxesHelper(100);
     this.scene.add(axesHelper);
 
-    const planeGeometry = new THREE.PlaneGeometry(
-      this.shapeSize * 100,
-      this.shapeSize * 100,
+    const lowerPlaneGeometry = new THREE.PlaneGeometry(
+      this.shapeSize * 500,
+      this.shapeSize * 500,
       10,
       10
     );
-    const planeMaterial = new THREE.MeshBasicMaterial({
+    const lowerPlaneMaterial = new THREE.MeshBasicMaterial({
       side: THREE.DoubleSide,
-      color: "#0099ff",
+      color: "#ff0000",
       transparent: true,
       opacity: 0.1,
     });
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.rotation.x = THREE.MathUtils.degToRad(90);
-    this.scene.add(plane);
+    const lowerPlane = new THREE.Mesh(lowerPlaneGeometry, lowerPlaneMaterial);
+    lowerPlane.rotation.x = THREE.MathUtils.degToRad(90);
+    lowerPlane.position.y = -400;
+    this.scene.add(lowerPlane);
   }
 
   addObjects() {
