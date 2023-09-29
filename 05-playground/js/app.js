@@ -40,6 +40,7 @@ export default class Playground {
     this.pointer = new THREE.Vector2();
     this.intersectingObject = null;
     this.activeObject = null;
+    this.selectedObject = null;
 
     this.basicMaterialOptions = {
       color: "#ff0000",
@@ -54,6 +55,10 @@ export default class Playground {
     this.activeMaterialOptions = {
       color: "#000000",
       wireframe: true,
+    };
+
+    this.selectedMaterialOptions = {
+      color: "#00ff00",
     };
 
     this.addHelpers();
@@ -249,6 +254,16 @@ export default class Playground {
   setupEvents() {
     window.addEventListener("resize", this.handleResize.bind(this));
     window.addEventListener("pointermove", this.handlePointerMove.bind(this));
+    window.addEventListener(
+      "pointerdown",
+      this.handlePointerDown.bind(this),
+      false
+    );
+    window.addEventListener(
+      "pointerup",
+      this.handlePointerUp.bind(this),
+      false
+    );
   }
 
   render() {
@@ -272,9 +287,14 @@ export default class Playground {
       }
 
       this.activeObject = intersects[0].object;
-      this.activeObject.material.color.set(this.activeMaterialOptions.color);
+      if (this.activeObject !== this.selectedObject) {
+        this.activeObject.material.color.set(this.activeMaterialOptions.color);
+      }
     } else {
-      if (this.activeObject !== null) {
+      if (
+        this.activeObject !== null &&
+        this.activeObject !== this.selectedObject
+      ) {
         this.activeObject.material.color.set(this.basicMaterialOptions.color);
       }
       this.activeObject = null;
@@ -301,6 +321,38 @@ export default class Playground {
     // (-1 to +1) for both components
     this.pointer.x = (event.clientX / this.width) * 2 - 1;
     this.pointer.y = -(event.clientY / this.height) * 2 + 1;
+  }
+
+  handlePointerDown() {
+    this.pointerDown = true;
+    this.cachedActiveObject = this.activeObject;
+
+    if (this.selectedObject && this.selectedObject !== this.activeObject) {
+      this.selectedObject.material.color.set(this.basicMaterialOptions.color);
+    }
+  }
+
+  handlePointerUp() {
+    this.pointerDown = false;
+
+    // Making sure the selected object was "clicked", not dragged and released on another object
+    if (
+      this.activeObject !== null &&
+      this.activeObject === this.cachedActiveObject
+    ) {
+      this.selectedObject = this.activeObject;
+
+      this.selectedObject.material.color.set(
+        this.selectedMaterialOptions.color
+      );
+    } else {
+      if (this.selectedObject) {
+        this.selectedObject.material.color.set(this.basicMaterialOptions.color);
+        this.selectedObject = null;
+      }
+    }
+
+    this.cachedActiveObject = null;
   }
 }
 
