@@ -58,7 +58,7 @@ export default class Playground {
     };
 
     this.selectedMaterialOptions = {
-      color: "#00ff00",
+      color: "#0000ff",
     };
 
     this.addHelpers();
@@ -321,6 +321,12 @@ export default class Playground {
     // (-1 to +1) for both components
     this.pointer.x = (event.clientX / this.width) * 2 - 1;
     this.pointer.y = -(event.clientY / this.height) * 2 + 1;
+
+    if (this.activeObject) {
+      this.setCursor("pointer");
+    } else {
+      this.setCursor();
+    }
   }
 
   handlePointerDown() {
@@ -330,6 +336,10 @@ export default class Playground {
     if (this.selectedObject && this.selectedObject !== this.activeObject) {
       this.selectedObject.material.color.set(this.basicMaterialOptions.color);
     }
+  }
+
+  setCursor(cursorType = "default") {
+    this.container.style.cursor = cursorType;
   }
 
   handlePointerUp() {
